@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useSeedHeartStore } from '@/store/useSeedHeartStore'
 
 interface NodeDetailPanelProps {
@@ -20,6 +21,15 @@ export function NodeDetailPanel({ onRegenerate }: NodeDetailPanelProps) {
     closePanel()
     setSelected(null)
   }
+
+  // Keyboard: Escape closes the panel
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isPanelOpen) handleClose()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [isPanelOpen]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCopy = () => {
     if (node) navigator.clipboard.writeText(node.content)
