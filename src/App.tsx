@@ -5,6 +5,9 @@ import { NodeDetailPanel } from '@/components/NodeDetailPanel'
 import { useSeedHeartStore } from '@/store/useSeedHeartStore'
 import { LMStudioClient } from '@/ai/LMStudioClient'
 import { generateMemeTree } from '@/ai/generateMemeTree'
+import { buildTree } from '@/graph/TreeBuilder'
+import { layoutTree } from '@/graph/TreeLayout'
+import { FIXTURE_RAW } from '@/graph/fixtures'
 
 const client = new LMStudioClient()
 
@@ -25,20 +28,13 @@ export default function App() {
         const msg = err instanceof Error ? err.message : String(err)
         store.setError(msg)
         store.setGenerating(false)
-
-        // Fall back to fixture so the UI still renders
-        import('@/graph/fixtures').then(({ FIXTURE_RAW }) =>
-          import('@/graph/TreeBuilder').then(({ buildTree }) =>
-            import('@/graph/TreeLayout').then(({ layoutTree }) => {
-              store.setTree(layoutTree(buildTree(FIXTURE_RAW)))
-            }),
-          ),
-        )
+        // Fall back to fixture so the UI still renders something
+        store.setTree(layoutTree(buildTree(FIXTURE_RAW)))
       })
   }
 
   const handleRegenerate = (_nodeId: string) => {
-    // Phase 7
+    // Phase 9 — per-leaf regeneration
   }
 
   return (
