@@ -39,21 +39,33 @@ export async function generateMemeTree(
   ])
 
   const json = extractJSON(raw)
-  const parsed = parseAIResponse(json)
-  return layoutTree(buildTree(parsed))
+  try {
+    const parsed = parseAIResponse(json)
+    return layoutTree(buildTree(parsed))
+  } catch (err) {
+    // Log the raw model output to aid prompt iteration
+    console.warn('[SeedHeart] AI response parse failed.\nRaw output:\n', raw)
+    throw err
+  }
 }
 
 /**
- * Strips markdown code fences if the model wrapped the JSON despite instructions.
+ * Strips markdown code fences and <think>...</think> chain-of-thought blocks
+ * (produced by Qwen3, DeepSeek-R1, and similar reasoning models) before
+ * extracting the JSON object.
  */
 export function extractJSON(text: string): string {
-  const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
+  // Remove <think>...</think> reasoning blocks (Qwen3 / DeepSeek-R1 style)
+  const stripped = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim()
+
+  // Handle markdown code fences: ```json ... ``` or ``` ... ```
+  const fenceMatch = stripped.match(/```(?:json)?\s*([\s\S]*?)```/)
   if (fenceMatch) return fenceMatch[1].trim()
 
-  // Find first { to last } as fallback
-  const start = text.indexOf('{')
-  const end = text.lastIndexOf('}')
-  if (start !== -1 && end > start) return text.slice(start, end + 1)
+  // Fallback: extract from first { to last }
+  const start = stripped.indexOf('{')
+  const end = stripped.lastIndexOf('}')
+  if (start !== -1 && end > start) return stripped.slice(start, end + 1)
 
-  return text.trim()
+  return stripped
 }

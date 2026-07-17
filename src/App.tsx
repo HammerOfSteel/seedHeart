@@ -1,18 +1,25 @@
+import { useEffect } from 'react'
 import { CanvasHost } from '@/components/CanvasHost'
 import { ModeSwitcher } from '@/components/ModeSwitcher'
 import { SeedInput } from '@/components/SeedInput'
 import { NodeDetailPanel } from '@/components/NodeDetailPanel'
+import { ImportExport } from '@/components/ImportExport'
 import { useSeedHeartStore } from '@/store/useSeedHeartStore'
 import { LMStudioClient } from '@/ai/LMStudioClient'
 import { generateMemeTree } from '@/ai/generateMemeTree'
 import { buildTree } from '@/graph/TreeBuilder'
 import { layoutTree } from '@/graph/TreeLayout'
-import { FIXTURE_RAW } from '@/graph/fixtures'
+import { SHOWCASE_RAW } from '@/graph/showcaseFixture'
 
 const client = new LMStudioClient()
 
 export default function App() {
   const error = useSeedHeartStore((s) => s.error)
+
+  // Load the showcase tree on first render so the visualizer isn't empty
+  useEffect(() => {
+    useSeedHeartStore.getState().setTree(layoutTree(buildTree(SHOWCASE_RAW)))
+  }, [])
 
   const handleGrow = (idea: string) => {
     const store = useSeedHeartStore.getState()
@@ -28,8 +35,8 @@ export default function App() {
         const msg = err instanceof Error ? err.message : String(err)
         store.setError(msg)
         store.setGenerating(false)
-        // Fall back to fixture so the UI still renders something
-        store.setTree(layoutTree(buildTree(FIXTURE_RAW)))
+        // Fall back to showcase so the UI always renders something
+        store.setTree(layoutTree(buildTree(SHOWCASE_RAW)))
       })
   }
 
@@ -47,7 +54,10 @@ export default function App() {
         <span className="text-white/60 text-sm font-light tracking-[0.3em] uppercase select-none">
           SeedHeart
         </span>
-        <ModeSwitcher />
+        <div className="flex items-center gap-3">
+          <ImportExport />
+          <ModeSwitcher />
+        </div>
       </div>
 
       {/* Error toast */}
