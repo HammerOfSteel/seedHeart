@@ -10,6 +10,16 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      // Proxy LM Studio requests to avoid browser CORS preflights
+      '/api/lm-studio': {
+        target: 'http://localhost:1234',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/lm-studio/, '/v1'),
+      },
+    },
+  },
   build: {
     rollupOptions: {
       output: {

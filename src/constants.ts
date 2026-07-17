@@ -37,8 +37,9 @@ export const ENABLE_SCENE_ROTATION = import.meta.env.VITE_ENABLE_SCENE_ROTATION 
 
 // ─── LM Studio API ───────────────────────────────────────────────────────────
 
-export const LM_STUDIO_BASE_URL =
-  import.meta.env.VITE_LM_STUDIO_BASE_URL ?? 'http://localhost:1234/v1'
+// In dev the Vite proxy at /api/lm-studio → localhost:1234/v1 avoids CORS preflights.
+// Override with VITE_LM_STUDIO_BASE_URL in .env for production.
+export const LM_STUDIO_BASE_URL = import.meta.env.VITE_LM_STUDIO_BASE_URL ?? '/api/lm-studio'
 export const LM_STUDIO_MODEL = import.meta.env.VITE_LM_STUDIO_MODEL ?? 'local-model'
 export const LM_STUDIO_TEMPERATURE = Number(import.meta.env.VITE_LM_STUDIO_TEMPERATURE ?? 0.7)
 export const LM_STUDIO_MAX_TOKENS = Number(import.meta.env.VITE_LM_STUDIO_MAX_TOKENS ?? 1024)
