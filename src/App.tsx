@@ -3,23 +3,38 @@ import { ModeSwitcher } from '@/components/ModeSwitcher'
 import { SeedInput } from '@/components/SeedInput'
 import { NodeDetailPanel } from '@/components/NodeDetailPanel'
 import { useSeedHeartStore } from '@/store/useSeedHeartStore'
+import { LMStudioClient } from '@/ai/LMStudioClient'
+import { generateMemeTree } from '@/ai/generateMemeTree'
+
+const client = new LMStudioClient()
 
 export default function App() {
   const error = useSeedHeartStore((s) => s.error)
 
-  const handleGrow = (_idea: string) => {
-    // Phase 7 will wire in the actual AI call
-    // For now, load the fixture tree to verify the UI renders
-    import('@/graph/fixtures').then(({ FIXTURE_RAW }) =>
-      import('@/graph/TreeBuilder').then(({ buildTree }) =>
-        import('@/graph/TreeLayout').then(({ layoutTree }) => {
-          const tree = layoutTree(buildTree(FIXTURE_RAW))
-          useSeedHeartStore.getState().setTree(tree)
-          useSeedHeartStore.getState().setGenerating(false)
-        }),
-      ),
-    )
-    useSeedHeartStore.getState().setGenerating(true)
+  const handleGrow = (idea: string) => {
+    const store = useSeedHeartStore.getState()
+    store.setGenerating(true)
+    store.setError(null)
+
+    generateMemeTree(client, idea)
+      .then((tree) => {
+        store.setTree(tree)
+        store.setGenerating(false)
+      })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err)
+        store.setError(msg)
+        store.setGenerating(false)
+
+        // Fall back to fixture so the UI still renders
+        import('@/graph/fixtures').then(({ FIXTURE_RAW }) =>
+          import('@/graph/TreeBuilder').then(({ buildTree }) =>
+            import('@/graph/TreeLayout').then(({ layoutTree }) => {
+              store.setTree(layoutTree(buildTree(FIXTURE_RAW)))
+            }),
+          ),
+        )
+      })
   }
 
   const handleRegenerate = (_nodeId: string) => {
